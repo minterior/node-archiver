@@ -31,12 +31,39 @@ describe('archiver', function() {
   });
 
   describe('core', function() {
+    describe('#abort', function() {
+      var archive;
+
+      before(function(done) {
+        archive = archiver('json');
+        var testStream = new WriteStream('tmp/abort.json');
+
+        testStream.on('close', function() {
+          done();
+        });
+
+        archive.pipe(testStream);
+
+        archive
+          .append(testBuffer, { name: 'buffer.txt', date: testDate })
+          .append(fs.createReadStream('test/fixtures/test.txt'), { name: 'stream.txt', date: testDate })
+          .file('test/fixtures/test.txt')
+          .abort();
+      });
+
+      it('should have a state of aborted', function() {
+        assert.property(archive, '_state');
+        assert.propertyVal(archive._state, 'aborted', true);
+      });
+    });
+
     describe('#append', function() {
       var actual;
+      var archive;
       var entries = {};
 
       before(function(done) {
-        var archive = archiver('json');
+        archive = archiver('json');
         var testStream = new WriteStream('tmp/append.json');
 
         testStream.on('close', function() {
@@ -96,10 +123,11 @@ describe('archiver', function() {
 
     describe('#file', function() {
       var actual;
+      var archive;
       var entries = {};
 
       before(function(done) {
-        var archive = archiver('json');
+        archive = archiver('json');
         var testStream = new WriteStream('tmp/file.json');
 
         testStream.on('close', function() {
@@ -149,10 +177,11 @@ describe('archiver', function() {
 
     describe('#bulk', function() {
       var actual;
+      var archive;
       var entries = {};
 
       before(function(done) {
-        var archive = archiver('json');
+        archive = archiver('json');
         var testStream = new WriteStream('tmp/bulk.json');
 
         testStream.on('close', function() {

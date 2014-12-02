@@ -1,4 +1,4 @@
-# Archiver v0.12.0 [![Build Status](https://travis-ci.org/ctalkington/node-archiver.svg?branch=master)](https://travis-ci.org/ctalkington/node-archiver)
+# Archiver v0.13.0 [![Build Status](https://travis-ci.org/ctalkington/node-archiver.svg?branch=master)](https://travis-ci.org/ctalkington/node-archiver)
 
 a streaming interface for archive generation
 
@@ -28,7 +28,14 @@ Inherits [Transform Stream](http://nodejs.org/api/stream.html#stream_class_strea
 
 #### abort()
 
-Aborts the archiving process by clearing the remaining queue. The instance will remain available in a read-only state.
+Aborts the archiving process, taking a best-effort approach, by:
+
+* removing any pending queue tasks
+* allowing any active queue workers to finish
+* detaching internal module pipes
+* ending both sides of the Transform stream
+
+*It will NOT drain any remaining sources.*
 
 #### append(input, data)
 
@@ -45,9 +52,9 @@ archive.append(null, { name:'dir/' });
 
 #### bulk(mappings)
 
-Appends multiple entries from passed array of src-dest mappings. A lazystream wrapper is used to prevent issues with open file limits.
+Appends multiple entries from passed array of src-dest mappings. A [lazystream](https://github.com/jpommerening/node-lazystream) wrapper is used to prevent issues with open file limits.
 
-Globbing patterns are supported through use of the [file-utils](https://github.com/SBoudrias/file-utils) package. Please note that multiple src files to single dest file (ie concat) is not supported.
+Globbing patterns are supported through use of the bundled [file-utils](https://github.com/SBoudrias/file-utils) module. Please note that multiple src files to single dest file (ie concat) is not supported.
 
 The `data` property can be set (per src-dest mapping) to define data for matched entries.
 
@@ -62,7 +69,7 @@ For more detail on this feature, please see [BULK.md](https://github.com/ctalkin
 
 #### file(filepath, data)
 
-Appends a file given its filepath using a lazystream wrapper to prevent issues with open file limits. When the instance has received, processed, and emitted the file, the `entry` event is fired.
+Appends a file given its filepath using a [lazystream](https://github.com/jpommerening/node-lazystream) wrapper to prevent issues with open file limits. When the instance has received, processed, and emitted the file, the `entry` event is fired.
 
 ```js
 archive.file('mydir/file.txt', { name:'file.txt' });
@@ -100,7 +107,7 @@ Sets the number of workers used to process the internal fs stat queue. Defaults 
 
 #### store `boolean`
 
-If true, all entry contents will be archived without compression by default.
+If true, all entries will be archived without compression. Defaults to `false`.
 
 #### zlib `object`
 
@@ -120,7 +127,7 @@ When using the `bulk` or `file` methods, fs stat data is used as the default val
 
 #### store `boolean`
 
-If true, entry contents will be archived without compression.
+If true, this entry will be archived without compression. Defaults to global `store` option.
 
 #### comment `string`
 
